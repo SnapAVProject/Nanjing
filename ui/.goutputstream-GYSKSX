@@ -1,0 +1,972 @@
+#include "setportpage.h"
+#include "ui_setportpage.h"
+#include "mainctrl.h"
+#include "servercomm.h"
+#include "sendimage.h"
+#include "exceptioncomm.h"
+#include "db.h"
+#include "driver.h"
+#include <QLabel>
+#include <QPushButton>
+#include <QStackedLayout>
+#include <QMessageBox>
+#include <QDateTimeEdit>
+#include "configure/mconfig.h"
+
+setportpage::setportpage(QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::setportpage)
+{
+    ui->setupUi(this);
+
+    this->setWindowFlags(Qt::FramelessWindowHint);
+    init();
+
+    system("(sh mynetwork.sh &) >> debuglog.txt");
+}
+
+setportpage::~setportpage()
+{
+    delete ui;
+}
+
+
+void setportpage::init()
+{
+    this->setStyleSheet("QDialog{background-image: url(:/public/images/public/beijing.png)}");
+
+    page = new QWidget(this);
+    page->resize(800,450);
+    page->move(0,0);
+
+    stack = new QStackedLayout(page);
+
+    QWidget *homePage = new QWidget(page);
+    homePage->resize(800,450);
+    homePage->move(0,0);
+
+    QLabel *terminallabel = new QLabel(homePage);
+    terminallabel->resize(100,40);
+    terminallabel->move(210,53);
+    terminallabel->setStyleSheet("background-image: url(:/page/images/setPort/word1.png)");
+
+    QLabel *portlabel = new QLabel(homePage);
+    portlabel->resize(100,35);
+    portlabel->move(210,126);
+    portlabel->setStyleSheet("background-image: url(:/page/images/setPort/word2.png)");
+
+    QLabel *serveraddrlabel = new QLabel(homePage);
+    serveraddrlabel->resize(147,32);
+    serveraddrlabel->move(160,199);
+    serveraddrlabel->setStyleSheet("background-image: url(:/page/images/setPort/word3.png)");
+
+    QLabel *openCell = new QLabel(homePage);
+    openCell->resize(120,40);
+    openCell->move(190,260);
+    openCell->setStyleSheet("background-image: url(:/page/images/setPort/word4.png)");
+
+    QLabel *sendimage = new QLabel(homePage);
+    sendimage->resize(128,44);
+    sendimage->move(180,330);
+    sendimage->setStyleSheet("background-image: url(:/page/images/manage/word5.png)");
+
+    QLabel *goodscheck = new QLabel(homePage);
+    goodscheck->resize(128,44);
+    goodscheck->move(180,395);
+    goodscheck->setStyleSheet("background-image: url(:/page/images/manage/word14.png)");
+
+    QWidget *endPage = new QWidget(page);
+    endPage->resize(800,450);
+    endPage->move(0,0);
+
+    QLabel *citylabel = new QLabel(endPage);
+    citylabel->resize(141,34);
+    citylabel->move(175,55);
+    citylabel->setStyleSheet("background-image: url(:/page/images/manage/cityId.png)");
+
+
+    QLabel *md5Id = new QLabel(endPage);
+    md5Id->resize(134,45);
+    md5Id->move(180,126);
+    md5Id->setStyleSheet("background-image: url(:/page/images/manage/word4.png)");
+
+    QLabel *coinTest = new QLabel(endPage);
+    coinTest->resize(120,40);
+    coinTest->move(190,200);
+    coinTest->setStyleSheet("background-image: url(:/page/images/manage/word6.png)");
+
+    QLabel *dateTimeTest = new QLabel(endPage);
+    dateTimeTest->resize(120,40);
+    dateTimeTest->move(188,266);
+    dateTimeTest->setStyleSheet("background-image: url(:/page/images/manage/word7.png)");
+
+    QLabel *photoLabel = new QLabel(endPage);
+    photoLabel->resize(120,40);
+    photoLabel->move(188,350);
+    photoLabel->setStyleSheet("background-image: url(:/page/images/manage/word8.png)");
+
+    QWidget *testPage = new QWidget(page);
+    testPage->resize(800,450);
+    testPage->move(0,0);
+
+    QLabel * scanTestLabel= new QLabel(testPage);
+    scanTestLabel->resize(120,40);
+    scanTestLabel->move(200,126);
+    scanTestLabel->setStyleSheet("background-image: url(:/page/images/manage/word9.png)");
+
+    QLabel *networkTestLabel = new QLabel(testPage);
+    networkTestLabel->resize(120,35);
+    networkTestLabel->move(200,200);
+    networkTestLabel->setStyleSheet("background-image: url(:/page/images/manage/word10.png)");
+
+    QLabel *upsTestLabel = new QLabel(testPage);
+    upsTestLabel->resize(120,35);
+    upsTestLabel->move(200,275);
+    upsTestLabel->setStyleSheet("background-image: url(:/page/images/manage/word11.png)");
+
+
+
+    catchPhotoLabel = new QLabel(endPage);
+    catchPhotoLabel->resize(160,120);
+    catchPhotoLabel->move(340,300);
+    catchPhotoLabel->setAlignment(Qt::AlignCenter);
+
+    terminalId_lineEdit = new CKeyBoardLineEdit(homePage);
+    terminalId_lineEdit->resize(350,40);
+    terminalId_lineEdit->move(330,53);
+
+    portId_lineEdit = new CKeyBoardLineEdit(homePage);
+    portId_lineEdit->resize(350,40);
+    portId_lineEdit->move(330,126);
+
+    serveraddr_lineEdit = new CKeyBoardLineEdit(homePage);
+    serveraddr_lineEdit->resize(350,40);
+    serveraddr_lineEdit->move(330,199);
+    //serveraddr_lineEdit->setInputMask("000.000.000.000");
+
+    openCell_lineEdit = new CKeyBoardLineEdit(homePage);
+    openCell_lineEdit->resize(200,40);
+    openCell_lineEdit->move(330,260);
+    openCell_lineEdit->setMaxLength(4);
+
+    cityId_lineEdit = new CKeyBoardLineEdit(endPage);
+    cityId_lineEdit->resize(350,40);
+    cityId_lineEdit->move(330,53);
+
+    md5Code_lineEdit = new CKeyBoardLineEdit(endPage);
+    md5Code_lineEdit->resize(350,40);
+    md5Code_lineEdit->move(330,126);
+    md5Code_lineEdit->setEchoMode(QLineEdit::Password);
+
+    coinTest_lineEdit = new QLineEdit(endPage);
+    coinTest_lineEdit->resize(200,40);
+    coinTest_lineEdit->move(330,200);
+    coinTest_lineEdit->setAlignment(Qt::AlignRight);
+    coinTest_lineEdit->setStyleSheet("QLineEdit{font-family:wenquanyi; font-size:30px;padding: 1px;border-style: solid;border: 2px solid gray;border-radius: 8px;}");
+
+
+    dateTimeEdit = new QDateTimeEdit(endPage);
+    dateTimeEdit->resize(200,40);
+    dateTimeEdit->move(330,266);
+    dateTimeEdit->setAlignment(Qt::AlignCenter);
+    dateTimeEdit->setDisplayFormat("yyyy-MM-dd hh:mm:ss");
+    dateTimeEdit->setStyleSheet("QDateTimeEdit{font-family:wenquanyi; font-size:18px;padding: 1px;border-style: solid;border: 2px solid gray;border-radius: 8px;}");
+
+    openBoxBtn = new QPushButton(homePage);
+    openBoxBtn->resize(99,62);
+    openBoxBtn->move(580,250);
+    openBoxBtn->setFlat(true);
+    openBoxBtn->setFocusPolicy(Qt::NoFocus);
+    openBoxBtn->setStyleSheet("background-color:transparent;background-image:url(:/page/images/take/okBtn.png)");
+
+    sendImageBtn = new QPushButton(homePage);
+    sendImageBtn->resize(120,47);
+    sendImageBtn->move(330,330);
+    sendImageBtn->setFlat(true);
+    sendImageBtn->setFocusPolicy(Qt::NoFocus);
+    sendImageBtn->setStyleSheet("background-color:transparent;background-image: url(:/page/images/manage/openuploadBtn.png)");
+    sendStatus = true;
+
+    checkGoodsBtn= new QPushButton(homePage);
+    checkGoodsBtn->resize(120,47);
+    checkGoodsBtn->move(330,395);
+    checkGoodsBtn->setFlat(true);
+    checkGoodsBtn->setFocusPolicy(Qt::NoFocus);
+    checkGoodsBtn->setStyleSheet("background-color:transparent;background-image: url(:/page/images/manage/closeuploadBtn.png)");
+
+
+    startTestBtn = new QPushButton(endPage);
+    startTestBtn->resize(99,62);
+    startTestBtn->move(580,185);
+    startTestBtn->setFlat(true);
+    startTestBtn->setFocusPolicy(Qt::NoFocus);
+    startTestBtn->setStyleSheet("background-color:transparent;background-image:url(:/page/images/manage/startBtn.png)");
+
+    setTimeBtn = new QPushButton(endPage);
+    setTimeBtn->resize(99,62);
+    setTimeBtn->move(580,260);
+    setTimeBtn->setFlat(true);
+    setTimeBtn->setFocusPolicy(Qt::NoFocus);
+    setTimeBtn->setStyleSheet("background-color:transparent;background-image:url(:/page/images/take/okBtn.png)");
+
+    photoBtn = new QPushButton(endPage);
+    photoBtn->resize(99,62);
+    photoBtn->move(580,340);
+    photoBtn->setFlat(true);
+    photoBtn->setFocusPolicy(Qt::NoFocus);
+    photoBtn->setStyleSheet("background-color:transparent;background-image:url(:/page/images/manage/startBtn.png)");
+
+
+
+    //设置网络IP
+    //设置网络ip地址
+    QLabel *setIPAddrLable = new QLabel(testPage);
+    setIPAddrLable->resize(224,67);
+    setIPAddrLable->move(97,40);
+   // setIPAddrLable->setText("网络通讯测试地址");
+    setIPAddrLable->setStyleSheet("background-image: url(:/page/images/manage/word12.png)");
+
+    ipAddr_lineEdit = new CKeyBoardLineEdit(testPage);
+    ipAddr_lineEdit->resize(200,40);
+    ipAddr_lineEdit->move(330,53);
+
+    ipAddrBoxBtn = new QPushButton(testPage);
+    ipAddrBoxBtn->resize(99,62);
+    ipAddrBoxBtn->move(580,40);
+    ipAddrBoxBtn->setFlat(true);
+    ipAddrBoxBtn->setFocusPolicy(Qt::NoFocus);
+    ipAddrBoxBtn->setStyleSheet("background-color:transparent;background-image:url(:/page/images/take/okBtn.png)");
+
+    connect(ipAddrBoxBtn,SIGNAL(clicked()),this,SLOT(setIPAddr_slot()));
+
+
+
+    scan_lineEdit = new QLineEdit(testPage);
+    scan_lineEdit->installEventFilter(this);
+    scan_lineEdit->resize(350,40);
+    scan_lineEdit->move(330,126);
+    scan_lineEdit->setStyleSheet("QLineEdit{font-family:wenquanyi; font-size:30px;padding: 1px;border-style: solid;border: 2px solid gray;border-radius: 8px;}");
+
+    network_lineEdit = new QLineEdit(testPage);
+    network_lineEdit->resize(200,40);
+    network_lineEdit->move(330,200);
+    network_lineEdit->setStyleSheet("QLineEdit{font-family:wenquanyi; font-size:30px;padding: 1px;border-style: solid;border: 2px solid gray;border-radius: 8px;}");
+
+    networkBtn = new QPushButton(testPage);
+    networkBtn->resize(99,62);
+    networkBtn->move(580,185);
+    networkBtn->setFlat(true);
+    networkBtn->setFocusPolicy(Qt::NoFocus);
+    networkBtn->setStyleSheet("background-color:transparent;background-image:url(:/page/images/manage/startBtn.png)");
+
+    ups_lineEdit = new QLineEdit(testPage);
+    ups_lineEdit->resize(350,40);
+    ups_lineEdit->move(330,275);
+    ups_lineEdit->setStyleSheet("QLineEdit{font-family:wenquanyi; font-size:30px;padding: 1px;border-style: solid;border: 2px solid gray;border-radius: 8px;}");
+
+
+
+
+    //第四页 通讯模式选择与配置
+    QWidget *ipSelectPage = new QWidget(page);
+    ipSelectPage->resize(800,450);
+    ipSelectPage->move(0,0);
+
+
+    QLabel *choiceNetworkLable = new QLabel(ipSelectPage);
+    choiceNetworkLable->resize(224,67);
+    choiceNetworkLable->move(97,26);
+    //choiceNetworkLable->setText("网络通讯模式选择：");
+    choiceNetworkLable->setStyleSheet("background-image: url(:/page/images/manage/word13.png)");
+
+    QStringList templist;
+    templist << "无线网络自动获取IP模式" << "有线网络自动获取IP模式" <<"有线网络手动设置IP模式";
+    mChoiceNetworkBox = new QComboBox(ipSelectPage);
+    mChoiceNetworkBox->setMaxVisibleItems(3);
+    mChoiceNetworkBox->setStyleSheet("font-family:wenquanyi; font-size:24px");
+    mChoiceNetworkBox->resize(300,40);
+    mChoiceNetworkBox->move(350,40);
+    mChoiceNetworkBox->addItems(templist);
+    connect(mChoiceNetworkBox,SIGNAL(currentIndexChanged(int)),this,SLOT(choiceNetworkBoxChange(int)));
+
+
+    mIpSetLable = new QLabel(ipSelectPage);
+    mIpSetLable->resize(120,40);
+    mIpSetLable->move(190,80);
+    mIpSetLable->setText("IP地址设置：");
+    mIPSet_lineEdit = new CKeyBoardLineEdit(ipSelectPage);
+    mIPSet_lineEdit->resize(300,40);
+    mIPSet_lineEdit->move(350,80);
+
+    mDefaultGwSetLable = new QLabel(ipSelectPage);
+    mDefaultGwSetLable->resize(120,40);
+    mDefaultGwSetLable->move(190,120);
+    mDefaultGwSetLable->setText("默认网关设置：");
+    mDefaultGwSet_lineEdit = new CKeyBoardLineEdit(ipSelectPage);
+    mDefaultGwSet_lineEdit->resize(300,40);
+    mDefaultGwSet_lineEdit->move(350,120);
+
+    mNetmaskLable = new QLabel(ipSelectPage);
+    mNetmaskLable->resize(120,40);
+    mNetmaskLable->move(190,160);
+    mNetmaskLable->setText("子网掩码设置：");
+    mNetmaskSet_lineEdit = new CKeyBoardLineEdit(ipSelectPage);
+    mNetmaskSet_lineEdit->resize(300,40);
+    mNetmaskSet_lineEdit->move(350,160);
+
+    mDnsLable1 = new QLabel(ipSelectPage);
+    mDnsLable1->resize(120,40);
+    mDnsLable1->move(190,200);
+    mDnsLable1->setText("DNS1设置：");
+    mDns1Set_lineEdit = new CKeyBoardLineEdit(ipSelectPage);
+    mDns1Set_lineEdit->resize(300,40);
+    mDns1Set_lineEdit->move(350,200);
+
+    mDnsLable2 = new QLabel(ipSelectPage);
+    mDnsLable2->resize(120,40);
+    mDnsLable2->move(190,240);
+    mDnsLable2->setText("DNS2设置：");
+    mDns2Set_lineEdit = new CKeyBoardLineEdit(ipSelectPage);
+    mDns2Set_lineEdit->resize(300,40);
+    mDns2Set_lineEdit->move(350,240);
+
+
+
+
+    stack->addWidget(homePage);
+    stack->addWidget(endPage);
+    stack->addWidget(testPage);
+    stack->addWidget(ipSelectPage);
+
+    page->setLayout(stack);
+
+
+
+    QPushButton *prevBtn = new QPushButton(this);
+    prevBtn->resize(182,70);
+    prevBtn->move(10,494);
+    prevBtn->setFlat(true);
+    prevBtn->setFocusPolicy(Qt::NoFocus);
+    prevBtn->setStyleSheet("background-color:transparent;background-image:url(:/public/images/public/frontBtn.png)");
+
+    QPushButton *nextBtn = new QPushButton(this);
+    nextBtn->resize(182,70);
+    nextBtn->move(200,494);
+    nextBtn->setFlat(true);
+    nextBtn->setFocusPolicy(Qt::NoFocus);
+    nextBtn->setStyleSheet("background-color:transparent;background-image:url(:/public/images/public/backBtn.png)");
+
+    QPushButton *okbtn = new QPushButton(this);
+    okbtn->resize(182,70);
+    okbtn->move(400,494);
+    okbtn->setFlat(true);
+    okbtn->setFocusPolicy(Qt::NoFocus);
+    okbtn->setStyleSheet("background-color:transparent;background-image:url(:/public/images/public/okBtn.png)");
+
+    QPushButton *cancelbtn = new QPushButton(this);
+    cancelbtn->resize(182,70);
+    cancelbtn->move(600,494);
+    cancelbtn->setFlat(true);
+    cancelbtn->setFocusPolicy(Qt::NoFocus);
+    cancelbtn->setStyleSheet("background-color:transparent;background-image:url(:/public/images/public/exitBtn.png)");
+
+    QButtonGroup *buttonGroup = new QButtonGroup(this);
+    buttonGroup->addButton(prevBtn,0);
+    buttonGroup->addButton(nextBtn,1);
+    buttonGroup->addButton(okbtn,2);
+    buttonGroup->addButton(cancelbtn,3);
+    buttonGroup->setExclusive(true);  //互斥
+
+
+//    connect(okbtn,SIGNAL(clicked()),this,SLOT(okbtn_slots()));
+//    connect(cancelbtn,SIGNAL(clicked()),this,SLOT(close()));
+    connect(openBoxBtn,SIGNAL(clicked()),this,SLOT(openCell_slot()));
+    connect(sendImageBtn,SIGNAL(clicked()),this,SLOT(isSendImage_slot()));
+    connect(checkGoodsBtn,SIGNAL(clicked()),this,SLOT(isCheckGoods_slot()));
+    connect(startTestBtn,SIGNAL(clicked()),this,SLOT(coinTest_slot()));
+    connect(setTimeBtn,SIGNAL(clicked()),this,SLOT(setTime_slot()));
+    connect(photoBtn,SIGNAL(clicked()),this,SLOT(catchPhoto_slot()));
+    connect(networkBtn,SIGNAL(clicked()),this,SLOT(network_slot()));
+
+    connect(buttonGroup,SIGNAL(buttonClicked(int)),this,SLOT(cutPage_slot(int)));
+
+    connect(terminalId_lineEdit,SIGNAL(btnPress()),this,SIGNAL(resetTime()));
+    connect(portId_lineEdit,SIGNAL(btnPress()),this,SIGNAL(resetTime()));
+    connect(serveraddr_lineEdit,SIGNAL(btnPress()),this,SIGNAL(resetTime()));
+    connect(openCell_lineEdit,SIGNAL(btnPress()),this,SIGNAL(resetTime()));
+    connect(md5Code_lineEdit,SIGNAL(btnPress()),this,SIGNAL(resetTime()));
+    connect(cityId_lineEdit,SIGNAL(btnPress()),this,SIGNAL(resetTime()));
+    connect(dateTimeEdit,SIGNAL(dateTimeChanged(QDateTime)),this,SIGNAL(resetTime()));
+}
+
+void setportpage::cutPage_slot(int id)
+{
+    emit resetTime();
+
+    int value = stack->currentIndex();
+
+    if(0 == id && (0 != value))
+    {
+        if(1 == value)
+        {
+            terminalId_lineEdit->setFocus();
+            catchPhotoLabel->clear();
+        }
+        else
+        {
+            scan_lineEdit->setFocus();
+            scan_lineEdit->clear();
+            network_lineEdit->clear();
+            ups_lineEdit->clear();
+        }
+        stack->setCurrentIndex(--value);
+    }
+    else if(1 == id && (3 != value))
+    {
+        if(value == 0)
+        {
+            cityId_lineEdit->setFocus();
+        }
+        else if(value == 1)
+        {
+            ipAddr_lineEdit->setFocus();
+            catchPhotoLabel->clear();
+        }
+        else if(value == 2)
+        {
+            mChoiceNetworkBox->setFocus();
+        }
+        stack->setCurrentIndex(++value);
+    }
+    else if( 2 == id)
+    {
+        okbtn_slots();
+    }
+    else if(3 == id)
+    {
+        this->close();
+    }
+
+}
+
+void setportpage::coinTest_slot()
+{
+    emit resetTime();
+    coinTest_lineEdit->setFocus();
+    coinTest_lineEdit->setText("0");
+}
+
+void setportpage::setTime_slot()
+{
+    emit resetTime();
+    QString clock = dateTimeEdit->text();
+    clock = "date -s \"" + clock + "\"";
+    QByteArray clockData = clock.toLatin1();
+    system(clockData.data());
+
+    system("hwclock -u -w");
+}
+
+void setportpage::catchPhoto_slot()
+{
+    emit resetTime();
+    photoBtn->setEnabled(false);
+    QString photoName = "test";
+
+    SCDriver::instance()->catchVideo(photoName);
+
+    sleep(3);
+    QString file = "./picture/" + photoName + ".bmp";
+
+    catchPhotoLabel->setPixmap(QPixmap(file));  //图片位置按照原来颜色显示
+
+    system("rm /usr/lxyz/picture/test.*");
+
+    photoBtn->setEnabled(true);
+}
+
+
+void setportpage::network_slot()
+{
+    emit resetTime();
+    this->networkBtn->setEnabled(false);
+
+    this->network_lineEdit->setText("等待结果...");
+
+    int returnValue = system("ping -c 1 -s 0 121.199.19.139 > /dev/null");
+    if (WEXITSTATUS( returnValue ) == 0)
+    {
+        this->network_lineEdit->setText("网络正常");
+    }
+    else
+    {
+        this->network_lineEdit->setText("网络异常");
+    }
+
+    this->networkBtn->setEnabled(true);
+}
+
+void setportpage::setIPAddr_slot()
+{
+    QString stringtemp = ipAddr_lineEdit->text();
+    if(stringtemp.isEmpty()||(!stringtemp.contains('.')))
+    {
+        myMessageBox.myPrompt(QMessageBox::Warning,tr("提示"),tr("请输入正确的IP地址"));
+    }
+    else if(!Smconfig::instance()->writePingIP(stringtemp))
+    {
+        myMessageBox.myPrompt(QMessageBox::Warning,tr("提示"),tr("设置ping网络失败"));
+    }
+}
+
+void setportpage::choiceNetworkBoxChange(int id)
+{
+    if(2 == id)
+    {
+        setNetworkTeamShow();
+    }
+    else
+    {
+        setNetworkTeamHide();
+    }
+}
+
+void setportpage::openCell_slot()
+{
+    emit resetTime();
+    bool ok;
+
+    QString waitOpenBox = openCell_lineEdit->text().trimmed();
+    QRegExp rxpasswd("^0\\d{3}");
+
+    openBoxBtn->setEnabled(false);
+    if (rxpasswd.exactMatch(waitOpenBox))  //普通的是0020  北京 0120
+    {
+        if(waitOpenBox == "0001")
+        {
+           myMessageBox.myPrompt(QMessageBox::Warning,tr("提示"),tr("没有此维修通道。"));
+           openBoxBtn->setEnabled(true);
+           return;
+        }
+        else if(waitOpenBox == "0002")
+        {
+            waitOpenBox = "0115";
+        }
+        else if(waitOpenBox == "0003")
+        {
+            waitOpenBox = "0116";
+        }
+        else if(waitOpenBox == "0004")
+        {
+            waitOpenBox = "0117";
+        }
+        else if(waitOpenBox == "0005")
+        {
+            waitOpenBox = "0118";
+        }
+        else if(waitOpenBox == "0006")
+        {
+            waitOpenBox = "0119";
+        }
+		else if(waitOpenBox == "0020")
+        {
+            waitOpenBox = "0120";
+        }
+        qint8 cabinetId = waitOpenBox.left(2).toInt(&ok,10);
+        qint8 cellId = waitOpenBox.right(2).toInt(&ok,10);
+        if(lockoperation.openLock(cabinetId,cellId) != 1)
+        {
+            myMessageBox.myPrompt(QMessageBox::Warning,tr("提示"),tr("箱门打不开"));
+          // QMessageBox::warning(this,tr("提示"),tr("箱门打不开"));
+        }
+    }
+    else
+    {
+            myMessageBox.myPrompt(QMessageBox::Warning,tr("提示"),tr("输入正确的箱门"));
+        // QMessageBox::warning(this,tr("提示"),tr("输入正确的箱门"));
+    }
+    openBoxBtn->setEnabled(true);
+}
+
+
+//true: 开启状态  false: 关闭状态
+
+void setportpage::isSendImage_slot()
+{
+    emit resetTime();
+
+    QString uploadImage;
+
+    if(sendStatus)
+    {
+        sendStatus = false;
+        uploadImage = "false";
+
+        SCSendImageThrd::instance()->setSendImage();
+        SCDatBase::instance()->setUploadImages(uploadImage);
+        sendImageBtn->setStyleSheet("background-color:transparent;background-image: url(:/page/images/manage/closeuploadBtn.png)");
+    }
+    else
+    {
+        sendStatus = true;
+        uploadImage = "true";
+
+        SCSendImageThrd::instance()->setSendImage();
+        SCDatBase::instance()->setUploadImages(uploadImage);
+        sendImageBtn->setStyleSheet("background-color:transparent;background-image: url(:/page/images/manage/openuploadBtn.png)");
+    }
+
+
+}
+
+void setportpage::isCheckGoods_slot()
+{
+    emit resetTime();
+    QString checkgoods;
+
+    if(SCDatBase::instance()->getGoodsCheck())
+    {
+        checkgoods = "false";
+        SCDriver::instance()->setCheckGoods();
+        SCDatBase::instance()->setGoodsCheck(checkgoods);
+        checkGoodsBtn->setStyleSheet("background-color:transparent;background-image: url(:/page/images/manage/closeuploadBtn.png)");
+    }
+    else
+    {
+        checkgoods = "true";
+        if(SCDatBase::instance()->setGoodsCheck(checkgoods))
+        {
+             SCDriver::instance()->setCheckGoods();
+             checkGoodsBtn->setStyleSheet("background-color:transparent;background-image: url(:/page/images/manage/openuploadBtn.png)");
+        }
+    }
+
+}
+
+void setportpage::recordCoin()
+{
+    if(!coinTest_lineEdit->text().isEmpty())
+    {
+        int count = coinTest_lineEdit->text().toInt();
+        coinTest_lineEdit->setText(QString("%1").arg(++count));
+    }
+}
+
+void setportpage::upsTest()
+{
+    ups_lineEdit->setText("断电");
+}
+
+
+void setportpage::readinfo()
+{
+    stack->setCurrentIndex(0);
+    QString terminal = SCDatBase::instance()->getTerminalId();
+    QString port;
+    QString serveraddr;
+    SCDatBase::instance()->getServerInfo(&serveraddr,&port);
+    QString md5Code = SCDatBase::instance()->getMdCode();
+    QString cityId = SCDatBase::instance()->getCityId();
+    QString uploadImage = SCDatBase::instance()->getUploadImages();
+    bool checkGoods  =  SCDatBase::instance()->getGoodsCheck();
+
+    dateTimeEdit->setDateTime(QDateTime::currentDateTime());
+    catchPhotoLabel->clear();
+    scan_lineEdit->clear();
+    network_lineEdit->clear();
+    ups_lineEdit->clear();
+
+    portId_lineEdit->setText(port);
+    terminalId_lineEdit->setText(terminal);
+    serveraddr_lineEdit->setText(serveraddr);
+    cityId_lineEdit->setText(cityId);
+    md5Code_lineEdit->setText(md5Code);
+
+    openCell_lineEdit->clear();
+    terminalId_lineEdit->setFocus();
+
+    coinTest_lineEdit->clear();
+
+    if(uploadImage == "true")
+    {
+        sendImageBtn->setStyleSheet("background-color:transparent;background-image: url(:/page/images/manage/openuploadBtn.png)");
+        sendStatus = true;
+    }
+    else
+    {
+        sendImageBtn->setStyleSheet("background-color:transparent;background-image: url(:/page/images/manage/closeuploadBtn.png)");
+        sendStatus = false;
+    }
+
+    if(checkGoods)
+    {
+        checkGoodsBtn->setStyleSheet("background-color:transparent;background-image: url(:/page/images/manage/openuploadBtn.png)");
+    }
+    else
+    {
+        checkGoodsBtn->setStyleSheet("background-color:transparent;background-image: url(:/page/images/manage/closeuploadBtn.png)");
+    }
+
+
+    //读取IP
+    QString stringtemp;
+    Smconfig::instance()->readPingIP(stringtemp);
+    ipAddr_lineEdit->setText(stringtemp);
+
+
+    //读取网络配置
+    Smconfig::instance()->readNetworklevel(stringtemp);
+
+    qDebug() << "readNetworklevel" << stringtemp;
+    mChoiceNetworkBox->setCurrentIndex(stringtemp.toInt());
+    if(stringtemp == "2")
+    {
+        setNetworkTeamShow();
+    }
+    else
+    {
+        setNetworkTeamHide();
+    }
+}
+
+void setportpage::okbtn_slots()
+{
+    emit resetTime();
+
+    QRegExp portrx("[1-9]\\d{3,4}");
+
+    QRegExp serveraddrrx("\\d+\\.\\d+\\.\\d+\\.\\d+");
+
+    QString port = portId_lineEdit->text().trimmed();
+    QString terminal = terminalId_lineEdit->text().trimmed();
+    QString serveraddr = serveraddr_lineEdit->text().trimmed();
+    QString md5Code = md5Code_lineEdit->text().trimmed();
+    QString cityId = cityId_lineEdit->text().trimmed();
+
+
+    QString ipSetStr = mIPSet_lineEdit->text();
+    QString ipNetmaskStr = mNetmaskSet_lineEdit->text();
+    QString ipDefaultGwStr = mDefaultGwSet_lineEdit->text();
+    QString dns1Str = mDns1Set_lineEdit->text();
+    QString dns2Str = mDns2Set_lineEdit->text();
+
+    //
+    int networkLevel = mChoiceNetworkBox->currentIndex();
+    QString networkLevelStr = QString::number(networkLevel);
+
+    bool netbool = true;
+
+    if(networkLevel == 2)
+    {
+        if(mIPSet_lineEdit->text().isEmpty() || mNetmaskSet_lineEdit->text().isEmpty() || mDefaultGwSet_lineEdit->text().isEmpty())
+        {
+            netbool = false;
+            myMessageBox.myPrompt(QMessageBox::Critical,tr("提示"),tr("请输入正确的IP地址、网关、子网掩码"));
+        }
+    }
+
+    if(!portrx.exactMatch(port) || terminal.size() > 32 || !serveraddrrx.exactMatch(serveraddr) || (md5Code.size() == 0) || (cityId.size() == 0))
+    {
+        portId_lineEdit->clear();
+        terminalId_lineEdit->clear();
+        serveraddr_lineEdit->clear();
+
+        myMessageBox.myPrompt(QMessageBox::Critical,tr("提示"),tr("请输入正确的IP、端口、终端号和MD5密匙、城市编码"));
+    }
+    else
+    {
+        if(setinfo(port,terminal,serveraddr,md5Code,cityId) && netbool)
+        {
+            SCServerComm::instance()->init(serveraddr, port);
+            SCExceptioncomm::instance()->init();
+            SCSendImageThrd::instance()->setIpPort(serveraddr,port);
+
+            bool setlevel = Smconfig::instance()->writeNetworklevel(networkLevelStr);
+
+            bool setnewwork = true;
+            if(networkLevel == 2)
+            {
+                setnewwork = Smconfig::instance()->writeNetworkConf(ipSetStr,ipNetmaskStr,ipDefaultGwStr,dns1Str,dns2Str);
+            }
+
+            if(setlevel && setnewwork)
+            {
+                QFile file("mynetwork.sh");
+                if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate |QIODevice::Text))
+                {
+                    qDebug() << "mynetwork.sh open WriteOnly fail";
+                    myMessageBox.myPrompt(QMessageBox::Information,tr("提示"),tr("设置成功,写入脚本文件失败"));
+                    return;
+                }
+                file.resize(0);
+                QTextStream out(&file);
+                out.setCodec("UTF-8");
+                if(networkLevel == 0)
+                {
+                    out << "killall udhcpc" << endl;
+                    out << "ifconfig eth0 down" << endl;
+                    out << "ps w | grep pppd | grep -v grep" << endl;
+                    out << "if [ $? -ne 0 ];then" << endl;
+                    out << "(pppd call cdma &) >> debuglog.txt" << endl;
+                    out <<"fi" << endl;
+                    out <<"sleep 60s" << endl;
+                    out <<"cp /etc/ppp/resolv.conf /etc/" << endl;
+                }
+                else if(networkLevel == 1)
+                {
+                    out << "killall pppd" << endl;
+                    out << "ifconfig eth0 up" << endl;
+                    out << "ps w | grep udhcpc | grep -v grep" << endl;
+                    out << "if [ $? -ne 0 ];then" << endl;
+                    out << "udhcpc" << endl;
+                    out <<"fi" << endl;
+                }
+                else
+                {
+                    //ifconfig eth0 192.168.0.20 netmask 255.255.255.0
+                    //route add default gw 192.168.0.254
+
+                    QString tempIPStr = "ifconfig eth0 " + ipSetStr + " netmask " + ipNetmaskStr;
+                    QString tempGWStr = "route add default gw " + ipDefaultGwStr;
+                    out << "killall pppd" << endl;
+                    out << "killall udhcpc" << endl;
+                    out << "ifconfig eth0 up" << endl;
+                    out << tempIPStr << endl;
+                    out << tempGWStr << endl;
+
+                    writeResolvFile();
+                }
+                file.close();
+                system("(sh mynetwork.sh &) >> debuglog.txt");
+                myMessageBox.myPrompt(QMessageBox::Information,tr("提示"),tr("设置成功"));
+            }
+            else
+            {
+                myMessageBox.myPrompt(QMessageBox::Information,tr("提示"),tr("设置IP、端口、终端号和MD5密匙、城市编码成功,网络设置失败"));
+            }
+        }
+        else
+        {
+            myMessageBox.myPrompt(QMessageBox::Information,tr("提示"),tr("设置失败"));
+        }
+    }
+}
+
+bool setportpage::setinfo(QString port, QString terminal, QString serveraddr,QString md5Code,QString cityId)
+{
+   bool ok_t = SCDatBase::instance()->setTerminalId(terminal);
+   bool ok_s = SCDatBase::instance()->setServerInfo(serveraddr,port);
+   bool ok_m = SCDatBase::instance()->setMdCode(md5Code);
+   bool ok_c = SCDatBase::instance()->setCityId(cityId);
+
+   if(ok_t && ok_s && ok_m && ok_c)
+   {
+        return true;
+   }
+   else
+   {
+        return false;
+   }
+}
+
+
+
+bool setportpage::loadcodeScan()
+{
+    emit resetTime();
+    //播放音乐
+    QString mp3file = "./music/scan.mp3";
+    QString vol = "15";
+    SCDriver::instance()->playVoice(mp3file,vol);
+
+    QByteArray data;
+    QString barcode;
+    SCDriver::instance()->codeScan(data);
+
+    barcode = QString(data);
+    this->scan_lineEdit->setText(barcode);
+
+    return true;
+
+}
+
+bool setportpage::eventFilter(QObject *obj, QEvent *event)
+{
+
+    if(obj == scan_lineEdit)
+    {
+        if(event->type() == QEvent::MouseButtonPress)
+        {
+           loadcodeScan();
+        }
+    }
+
+    return QDialog::eventFilter(obj,event);
+
+}
+
+void setportpage::closeEvent(QCloseEvent *)
+{
+
+    SCMainCtrl::instance()->enterStatus(ST_HOME, "");
+}
+
+void setportpage::setNetworkTeamHide()
+{
+    mIpSetLable->hide();
+    mIPSet_lineEdit->hide();
+    mNetmaskLable->hide();
+    mNetmaskSet_lineEdit->hide();
+    mDefaultGwSetLable->hide();
+    mDefaultGwSet_lineEdit->hide();
+    mDnsLable1->hide();
+    mDns1Set_lineEdit->hide();
+    mDnsLable2->hide();
+    mDns2Set_lineEdit->hide();
+}
+void setportpage::setNetworkTeamShow()
+{
+    QString ipSetStr;
+    QString ipNetmaskStr;
+    QString ipDefaultGwStr;
+    QString dns1Str;
+    QString dns2Str;
+
+    mIpSetLable->show();
+    mIPSet_lineEdit->show();
+    mNetmaskLable->show();
+    mNetmaskSet_lineEdit->show();
+    mDefaultGwSetLable->show();
+    mDefaultGwSet_lineEdit->show();
+    mDnsLable1->show();
+    mDns1Set_lineEdit->show();
+    mDnsLable2->show();
+    mDns2Set_lineEdit->show();
+
+    Smconfig::instance()->readNetworkConf(ipSetStr,ipNetmaskStr,ipDefaultGwStr,dns1Str,dns2Str);
+    mIPSet_lineEdit->setText(ipSetStr);
+    mNetmaskSet_lineEdit->setText(ipNetmaskStr);
+    mDefaultGwSet_lineEdit->setText(ipDefaultGwStr);
+    mDns1Set_lineEdit->setText(dns1Str);
+    mDns2Set_lineEdit->setText(dns2Str);
+}
+void setportpage::writeResolvFile()
+{
+    QString dns1 = "nameserver " + mDns1Set_lineEdit->text();
+    QString dns2 = "nameserver " + mDns2Set_lineEdit->text();
+    QFile file("/etc/resolv.conf");
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate |QIODevice::Text))
+    {
+        qDebug() << "/etc/resolv.conf open WriteOnly fail";
+        myMessageBox.myPrompt(QMessageBox::Information,tr("提示"),tr("写入配置DNS服务失败"));
+        return;
+    }
+    file.resize(0);
+    QTextStream out(&file);
+    out.setCodec("UTF-8");
+
+    out << dns1 << endl;
+    out << dns2 << endl;
+
+    file.close();
+}

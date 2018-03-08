@@ -1,0 +1,317 @@
+#include "infoinputpage.h"
+#include "ui_infoinputpage.h"
+#include "mainctrl.h"
+#include <QLabel>
+#include <QListView>
+#include <QPushButton>
+#include <QDebug>
+
+infoinputpage::infoinputpage(QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::infoinputpage)
+{
+    ui->setupUi(this);
+    this->setWindowFlags(Qt::FramelessWindowHint);
+
+    initPage();
+
+
+}
+
+infoinputpage::~infoinputpage()
+{
+    delete ui;
+}
+
+/****************************************************************
+**
+*	函数名称：	initpage
+*	函数功能：	初始化界面布局
+* 	函数参数：	无
+* 	返回值  :       无
+*
+****************************************************************/
+void infoinputpage::initPage()
+{
+    this->setStyleSheet("QDialog{background-image: url(:/page/images/info/info_bg.png)}");
+
+    QFont font;
+    font.setFamily(QString::fromUtf8("wenquanyi"));
+    font.setPointSize(16);
+
+    QPalette fontcolor;
+    fontcolor.setColor(QPalette::ButtonText,Qt::white);
+
+    QLabel *promptLabel = new QLabel(this);
+    promptLabel->resize(417,66);
+    promptLabel->move(0,0);
+    promptLabel->setStyleSheet("background-image: url(:/page/images/info/word1.png)");
+
+
+    QLabel *phoneLabel = new QLabel(this);
+    phoneLabel->resize(263,38);
+    phoneLabel->move(80,60);
+    phoneLabel->setStyleSheet("background-image: url(:/page/images/info/word2.png)");
+
+    mPhoneLineEdit = new CKeyBoardLineEdit(this);
+    mPhoneLineEdit->setMaxLength(11);
+    mPhoneLineEdit->resize(280,40);
+    mPhoneLineEdit->move(350,60);
+    mPhoneLineEdit->installEventFilter(this);
+
+    QLabel *idLabel = new QLabel(this);
+    idLabel->move(25,116);
+    idLabel->resize(325,40);
+    idLabel->setStyleSheet("background-image: url(:/page/images/info/word3.png)");
+
+    mIdLineEdit = new CKeyBoardLineEdit(this);
+    mIdLineEdit->setMaxLength(18);
+    mIdLineEdit->resize(280,40);
+    mIdLineEdit->move(350,120);
+    mIdLineEdit->installEventFilter(this);
+
+    QLabel *mM1CardLabel = new QLabel(this);
+    mM1CardLabel->move(100,189);
+    mM1CardLabel->resize(287,48);
+    mM1CardLabel->setText("请刷或者输入M1卡号：");
+    //mM1CardLabel->setStyleSheet("background-image: url(:/page/images/info/word4.png)");
+
+    mM1CardLineEdit = new CKeyBoardLineEdit(this);
+    mM1CardLineEdit->resize(280,40);
+    mM1CardLineEdit->setMaxLength(11);
+    mM1CardLineEdit->move(350,189);
+    mM1CardLineEdit->installEventFilter(this);
+
+    QLabel *mCustomerTypeLabel = new QLabel(this);
+    mCustomerTypeLabel->resize(300,62);
+    mCustomerTypeLabel->move(55,245);
+    mCustomerTypeLabel->setText("请选择客户类型：");
+    //mCustomerTypeLabel->setStyleSheet("background-image: url(:/page/images/info/word5.png)");
+
+
+    QStringList customerTypeList;
+    customerTypeList << "快递员" << "用户";
+    mCustomerTypeComBox = new QComboBox(this);
+    mCustomerTypeComBox->setView(new QListView());
+    mCustomerTypeComBox->setFont(font);
+    mCustomerTypeComBox->resize(280,40);
+    mCustomerTypeComBox->move(350,260);
+    mCustomerTypeComBox->addItems(customerTypeList);
+
+
+
+    QLabel *companyLabel = new QLabel(this);
+    companyLabel->resize(240,46);
+    companyLabel->move(100,335);
+    companyLabel->setStyleSheet("background-image: url(:/page/images/info/word6.png)");
+
+    mCompanyComBox = new QComboBox(this);
+  //  mCompanyComBox->setStyleSheet("QComboBox{border:1px solid gray;}"
+  //    "QComboBox QAbstractItemView::item{height:20px;}" //下拉选项高度
+  //    "QComboBox::drop-down{border:2px;}"); //下拉按钮
+    mCompanyComBox->setView(new QListView());
+    mCompanyComBox->setFont(font);
+
+    mCompanyComBox->resize(280,40);
+    mCompanyComBox->move(350,335);
+
+
+    okBtn = new QPushButton(this);
+    okBtn->resize(178,71);
+    okBtn->move(170,494);
+    okBtn->setFlat(true);
+    okBtn->setFocusPolicy(Qt::NoFocus);
+    okBtn->setStyleSheet("background-image:url(:/public/images/public/ok_btn.png)");
+
+    cancelBtn = new QPushButton(this);
+    cancelBtn->resize(178,71);
+    cancelBtn->move(453,494);
+    cancelBtn->setFlat(true);
+    cancelBtn->setFocusPolicy(Qt::NoFocus);
+    cancelBtn->setStyleSheet("background-image:url(:/public/images/public/exit_bg.png)");
+
+
+    connect(okBtn,SIGNAL(clicked()),this,SLOT(okBtn_slots()));
+    connect(cancelBtn,SIGNAL(clicked()),this,SLOT(cancelBtn_slots()));
+    connect(mPhoneLineEdit,SIGNAL(btnPress()),this,SIGNAL(resetTime()));
+    connect(mIdLineEdit,SIGNAL(btnPress()),this,SIGNAL(resetTime()));
+    connect(mM1CardLineEdit,SIGNAL(btnPress()),this,SIGNAL(resetTime()));
+}
+
+bool infoinputpage::judgeInfo()
+{
+    QRegExp rxCellPhone("[0-9]\\d{10}");
+  //  QRegExp rxId("[0-9]");
+    bool ret = true;
+    QString info;
+
+    if(this->mCompanyComBox->currentText().isEmpty())
+    {
+        info = "请选择快递公司";
+        ret = false;
+    }
+    else if(!rxCellPhone.exactMatch(this->mPhoneLineEdit->text().trimmed()))
+    {
+        info = "请输入正确的手机号码";
+        ret = false;
+    }
+//    else if(this->mPhoneLineEdit->text().trimmed() != this->mAgainPhoneLineEdit->text().trimmed())
+//    {
+//        info = "手机号码输入不一致";
+//        ret = false;
+//    }
+//    else if (!rxId.exactMatch(this->mIdLineEdit->text().trimmed()))
+//    {
+//        info = "请输入正确的身份证号";
+//        ret = false;
+//    }
+//    else if(this->mIdLineEdit->text().trimmed() != this->mAgainIdLineEdit->text().trimmed())
+//    {
+//        info = "身份证号码不一致";
+//        ret = false;
+//    }
+
+    if(!ret)
+    {
+        myMessageBox.myPrompt(QMessageBox::Warning,tr("提示"), info);
+    }
+
+    return ret;
+
+}
+void infoinputpage::clearInfo()
+{
+    this->mPhoneLineEdit->clear();
+    this->mM1CardLineEdit->clear();
+    this->mIdLineEdit->clear();
+    this->mCustomerTypeComBox->setCurrentIndex(0);
+    this->mCompanyComBox->setCurrentIndex(0);
+}
+
+void infoinputpage::okBtn_slots()
+{
+    resetTime();
+    saveExpressEmpResp respone;
+    if(judgeInfo())
+    {
+        this->okBtn->setEnabled(false);
+        this->cancelBtn->setEnabled(false);
+        /*姓名，身份证号，手机号码，M1卡号，客户类型,快递公司*/
+        QString customerName = "";
+        QString CardId = this->mIdLineEdit->text().trimmed();
+        QString mobilePhone = this->mPhoneLineEdit->text().trimmed();
+        QString m1cardId = mM1CardLineEdit->text().trimmed();
+        QString customerType = mCustomerTypeComBox->currentText().trimmed();
+        QString companyId = mCompanyInfo.key(mCompanyComBox->currentText());
+
+        QString myAccount = "";
+        QString myPasswd = "";
+
+        //接口没有定义好
+        //SCServerComm::instance()->saveExpressEmp(optM1,m1CardId,companyId,empName,cardId,mobilePhone,myAccount,myPasswd,&respone);
+
+
+        if(respone.success() == "true")
+        {
+            myMessageBox.myPrompt(QMessageBox::Information,tr("提示"),tr("注册成功"));
+            clearInfo();
+        }
+        else if(respone.success() == "false" && respone.errCode() == EXIST_IC_ERROR)
+        {
+            myMessageBox.myPrompt(QMessageBox::Warning,tr("提示"),tr("您输入的身份证号已注册。"));
+        }
+        else if(respone.success() == RET_FALSE && respone.errCode() == EXIST_PHONE_ERROR)
+        {
+            myMessageBox.myPrompt(QMessageBox::Warning,tr("提示"),tr("您输入的手机号码已注册。"));
+        }
+        else
+        {
+            myMessageBox.myPrompt(QMessageBox::Warning,tr("提示"),tr("网络错误,请联系客服。"));
+        }
+        this->okBtn->setEnabled(true);
+        this->cancelBtn->setEnabled(true);
+    }
+}
+
+void infoinputpage::cancelBtn_slots()
+{
+    clearInfo();
+    optM1.clear();
+    mCompanyInfo.clear();
+    mCompanyComBox->clear();
+    SCMainCtrl::instance()->enterStatus(ST_HOME, "");
+}
+
+void infoinputpage::readCardInfo(QString data)
+{
+    if(isIdWorking || isAgainIdWorking)
+    {
+        QWidget *fWidget = qApp->focusWidget();
+        QLineEdit *myobj = static_cast<QLineEdit*>(fWidget);
+        myobj->setText(data);
+    }
+}
+
+void infoinputpage::readInfo(QByteArray data)
+{
+    this->okBtn->setEnabled(true);
+    isIdWorking = false;
+    isAgainIdWorking = false;
+    QDataStream in(&data,QIODevice::ReadOnly);
+    in >> optM1 >> mCompanyInfo;
+
+    this->mCompanyComBox->addItems(mCompanyInfo.values());
+}
+
+bool infoinputpage::eventFilter(QObject *obj, QEvent *event)
+{
+    QLineEdit *myobj = static_cast<QLineEdit *>(obj);
+    if(obj == mPhoneLineEdit)
+    {
+        if(event->type() == QEvent::FocusIn)
+        {
+            myobj->setEchoMode(QLineEdit::Normal);
+        }
+        else if(event->type() == QEvent::FocusOut)
+        {
+            myobj->setEchoMode(QLineEdit::Password);
+        }
+    }
+    else if(obj == mM1CardLineEdit)
+    {
+        if(event->type() == QEvent::FocusIn)
+        {
+            myobj->setEchoMode(QLineEdit::Normal);
+        }
+        else if(event->type() == QEvent::FocusOut)
+        {
+            myobj->setEchoMode(QLineEdit::Password);
+        }
+    }
+    else if(obj == mIdLineEdit)
+    {
+        if(event->type() == QEvent::FocusIn)
+        {
+            isIdWorking = true;
+            myobj->setEchoMode(QLineEdit::Normal);
+        }
+        else if(event->type() == QEvent::FocusOut)
+        {
+            isIdWorking = false;
+            myobj->setEchoMode(QLineEdit::Password);
+        }
+    }
+    return QDialog::eventFilter(obj,event);
+}
+
+void infoinputpage::changeEvent(QEvent *e)
+{
+    QDialog::changeEvent(e);
+    switch (e->type()) {
+    case QEvent::LanguageChange:
+        ui->retranslateUi(this);
+        break;
+    default:
+        break;
+    }
+}

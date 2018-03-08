@@ -1,0 +1,87 @@
+#ifndef SENDFILE_H
+#define SENDFILE_H
+
+#include <QThread>
+#include "urlencode.h"
+#include "singleton.h"
+#include "servercomm.h"
+#include "mainctrl.h"
+#include "db.h"
+#include <QTime>
+#include <QDebug>
+
+#define FILE_SLEEP_TIME  35*60
+
+class CSendFileThrd : QThread
+{
+    Q_OBJECT
+
+public:
+
+    void init()
+    {
+        start();
+    }
+
+
+private:
+    CSendFileThrd(){}
+    ~CSendFileThrd(){}
+
+    bool performStatus;
+    QString terminal;
+
+    void sendFileProc()
+    {
+
+        QTime time = QTime::currentTime();
+        int hour = time.hour();
+        QString fileName = "debuglog.txt";
+
+        if(3 != hour)
+        {
+            performStatus = true;
+        }
+        if((3 == hour) && performStatus)
+        {
+            int filetime = qrand()%20;
+            qDebug() << "start send file" << filetime;
+            sleep(filetime*60);
+            QFile filesize("debuglog.txt");
+
+            if(filesize.size() > 10*1024*1024)
+            {
+                filesize.resize(0);
+            }       
+
+           uploadDeliveryPhotoResp respone;
+           SCServerComm::instance()->uploadDebugFiles(fileName,&respone);
+           if(respone.success() == RET_TRUE)
+           {
+              performStatus = false;
+              filesize.resize(0);
+           }
+        }
+    }
+
+    void run()
+    {
+        qsrand(time(0));
+        performStatus = true;
+        while(1)
+        {
+
+            sleep(FILE_SLEEP_TIME);
+            terminal = SCDatBase::instance()->getTerminalId();
+
+            if ((SCMainCtrl::instance()->curStatus() == 1) && terminal!="0000000000000000")
+            {
+                sendFileProc();
+            }
+        }
+    }
+    DECLARE_SINGLETON_CLASS(CSendFileThrd)
+};
+
+typedef Singleton<CSendFileThrd> SCSendFileThrd;
+#endif // SENDFILE_H

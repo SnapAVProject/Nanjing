@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configure>
+    <pingIP>www.baidu.com</pingIP>
+    <network>
+        <level>0</level>
+        <ipaddr>192.168.1.100</ipaddr>
+        <netmask>255.255.255.0</netmask>
+        <defaultGw>192.168.1.1</defaultGw>
+    </network>
+</configure>
